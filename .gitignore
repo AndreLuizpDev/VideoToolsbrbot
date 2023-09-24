@@ -4,7 +4,7 @@
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
 # Config files
-*.config
+app.config
 obj
 
 # User-specific files
