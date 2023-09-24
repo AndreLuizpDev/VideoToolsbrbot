@@ -5,6 +5,7 @@
 
 # Config files
 *.config
+obj
 
 # User-specific files
 *.rsuser
