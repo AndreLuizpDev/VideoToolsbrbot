@@ -7,6 +7,8 @@
 app.config
 obj
 
+.git
+
 # User-specific files
 *.rsuser
 *.suo
