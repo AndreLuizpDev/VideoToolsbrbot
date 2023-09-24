@@ -153,7 +153,7 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
 
     fileStream.Close();
 
-    Thread.Sleep(3000);
+    Thread.Sleep(10000);
 
     using Stream stream = System.IO.File.OpenRead(legendaFilePath);
 
