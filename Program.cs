@@ -8,6 +8,11 @@ using Xabe.FFmpeg;
 using NAudio.Wave;
 using System.Diagnostics;
 using System.Configuration;
+using OpenAI.Models;
+using System.Text;
+using System.IO;
+using Telegram.Bot.Types.ReplyMarkups;
+using System.Diagnostics.SymbolStore;
 
 var botClient = new TelegramBotClient(ConfigurationManager.AppSettings["api-Bot"]);
 var apiOpenAI = new OpenAIClient(ConfigurationManager.AppSettings["sk-apiKey"]);
@@ -35,47 +40,48 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
 
     var chatId = message.Chat.Id;
     var messageText = message.Text;
+    var languageChat = message.From.LanguageCode.Substring(0, 2) ?? "en";
 
-    string videosPath = Directory.GetCurrentDirectory();
-
-    for (int i = 0; i < 3; i++)
-    {
-        videosPath = Directory.GetParent(videosPath).FullName;
-    }
-
-    videosPath = videosPath + @"\Videos\";
-
-    Console.WriteLine($"A pasta atual do projeto é: {videosPath}");
-
-    Console.WriteLine($"mensagem recebida: '{messageText}' do tipo '{message.Type}' no chat '{chatId}'");
+    Console.WriteLine($"Received message: '{messageText}' of type '{message.Type}' in chat '{chatId}' {message.Chat.Username} Language: {languageChat}");
 
     if (message.Video is null)
     {
         var sendErro = await botClient.SendTextMessageAsync(
             chatId: chatId,
-            text: "Você precisa enviar um vídeo!",
+            text: "You need to send a video!",
             cancellationToken: ctoken
             );
         return;
     }
 
-    var sendMessage = await botClient.SendTextMessageAsync(
+    // Send a message indicating that the video is received and processing
+    Message sentMessage = await botClient.SendTextMessageAsync(
     chatId: chatId,
-    text: "Vídeo recebido, processando...",
+    text: "Video received, processing...",
     cancellationToken: ctoken
     );
 
+    // Get file information for the received video
     var fileInfo = await botClient.GetFileAsync(message.Video!.FileId);
     var filePath = fileInfo.FilePath;
 
-    var fileName = Path.GetFileName(filePath);
-
     Console.WriteLine($"{filePath} {messageText}");
 
-    string destinationFilePath = videosPath + fileName;
+    // Define the destination file path to save the video
+    string destinationFilePath = "/repo/VideoToolsbrbot/" + filePath;
 
-    Console.WriteLine("Salvando vídeo...");
 
+    // Check if the "videos" folder exists, and create it if it doesn't.
+    string videosFolder = Path.GetDirectoryName(destinationFilePath);
+
+    if (!Directory.Exists(videosFolder))
+    {
+        Directory.CreateDirectory(videosFolder);
+    }
+
+    Console.WriteLine("Saving the video...");
+
+    // Create a stream to save the video file
     await using Stream fileStream = System.IO.File.Create(destinationFilePath);
     await botClient.DownloadFileAsync(
         filePath: filePath,
@@ -84,44 +90,50 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
 
     fileStream.Close();
 
+    // Set the input and output file paths for further processing
     string inputFilePath = destinationFilePath;
-    string outputFilePath = videosPath + Path.GetFileNameWithoutExtension(filePath) + ".mp3";
+    string outputFilePath = "/repo/VideoToolsbrbot/Videos/" + Path.GetFileNameWithoutExtension(filePath) + ".mp3";
 
-    Console.WriteLine($"Entrada: {inputFilePath} Saída: {outputFilePath}");
+    Console.WriteLine($"Input: {inputFilePath} Output: {outputFilePath}");
 
-    sendMessage = await botClient.SendTextMessageAsync(
+    // Generating subtitles in the audio language
+    sentMessage = await botClient.SendTextMessageAsync(
     chatId: chatId,
-    text: "Gerando legenda...",
+    text: "Generating subtitles...",
     cancellationToken: ctoken
     );
 
+    // Create a reader for the audio file
     var reader = new MediaFoundationReader(inputFilePath);
     WaveFileWriter.CreateWaveFile(outputFilePath, reader);
 
-    var request = new AudioTranscriptionRequest(Path.GetFullPath(outputFilePath), responseFormat: AudioResponseFormat.Srt);
+    Console.WriteLine($"Selected language: {languageChat}");
+
+    // Define a request for audio transcription
+    var request = new AudioTranscriptionRequest(Path.GetFullPath(outputFilePath), language: languageChat, responseFormat: AudioResponseFormat.Srt);
+
+    // Generate the subtitles using whisper OpenAI
     var result = await apiOpenAI.AudioEndpoint.CreateTranscriptionAsync(request);
-    Console.WriteLine(result);
 
-    Console.WriteLine("Salvando legenda...");
+    Console.WriteLine("Saving subtitles...");
 
-    string subtitleFilePath = videosPath + Path.GetFileNameWithoutExtension(filePath) + ".srt";
+    // Define the path to save the subtitle file
+    string subtitleFilePath = "/repo/VideoToolsbrbot/Videos/" + Path.GetFileNameWithoutExtension(filePath) + ".srt";
 
     System.IO.File.WriteAllText(subtitleFilePath, result);
 
-    sendMessage = await botClient.SendTextMessageAsync(
+    sentMessage = await botClient.SendTextMessageAsync(
     chatId: chatId,
-    text: "Legendando vídeo...",
+    text: "Adding subtitles to the video...",
     cancellationToken: ctoken
     );
 
-    string legendaFilePath = videosPath + Path.GetFileNameWithoutExtension(filePath) + "_legendado.mp4";
+    string legendaFilePath = "/repo/VideoToolsbrbot/Videos/" + Path.GetFileNameWithoutExtension(filePath) + "_subtitled.mp4";
 
-    Console.WriteLine($"{legendaFilePath}");
+    Console.WriteLine($"Saving file: {Path.GetFileNameWithoutExtension(filePath)}_subtitled.mp4 ...");
 
-    Console.WriteLine($"Salvando arquivo: {Path.GetFileNameWithoutExtension(filePath)}_legendado.mp4 ...");
 
-    Console.WriteLine($"inputFilePath: {inputFilePath} subtitleFilePath: {subtitleFilePath} legendaFilePath: {legendaFilePath}");
-
+    // Configure the process
     var processInfo = new ProcessStartInfo
     {
         FileName = @"C:\ffmpeg-master-latest-win64-gpl\bin\ffmpeg.exe",
@@ -129,70 +141,115 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
         RedirectStandardOutput = true,
         RedirectStandardError = true,
         UseShellExecute = false,
-        CreateNoWindow = true
+        CreateNoWindow = true,
     };
 
-    sendMessage = await botClient.SendTextMessageAsync(
-    chatId: chatId,
-    text: "Enviando arquivo legendado...",
-    cancellationToken: ctoken
-    );
+    Console.WriteLine("Current date and time 0 ************: " + DateTime.Now);
 
-    fileStream.Close();
-
+    // Initialize the process
     using (var process = new Process())
     {
         process.StartInfo = processInfo;
+
+        // Configuration to read the process's standard output
+        var outputBuilder = new StringBuilder();
+        var errorBuilder = new StringBuilder();
+        process.OutputDataReceived += (sender, e) => outputBuilder.AppendLine(e.Data);
+        process.ErrorDataReceived += (sender, e) => errorBuilder.AppendLine(e.Data);
+
+        // Start the process and redirect output
         process.Start();
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
 
-        int timeoutMilliseconds = 6000;
-        process.WaitForExit(timeoutMilliseconds);
-    };
+        int timeoutMilliseconds = 60000;
 
-    Console.WriteLine("Arquivo gerado com sucesso!");
+        Console.WriteLine("Current date and time 1 ************: " + DateTime.Now);
 
-    fileStream.Close();
+        // Wait for the process to exit or reach a timeout
+        if (process.WaitForExit(timeoutMilliseconds))
+        {
+            Console.WriteLine("Current date and time 2 ************: " + DateTime.Now);
 
-    Thread.Sleep(10000);
+            // Check if the output contains information about bytes read
+            string output = outputBuilder.ToString();
+            bool fileReadComplete = output.Contains("file read:");
+            int bytesRead = 0;
+
+            if (fileReadComplete)
+            {
+                // Extract the bytes read from the output
+                int startIndex = output.LastIndexOf("file read:") + "file read:".Length;
+                int endIndex = output.LastIndexOf("bytes");
+                string bytesReadStr = output.Substring(startIndex, endIndex - startIndex).Trim();
+                if (int.TryParse(bytesReadStr, out bytesRead))
+                {
+                    Console.WriteLine($"Bytes read: {bytesRead}");
+                }
+            }
+
+            Console.WriteLine("File generated successfully!");
+
+            process.Close();
+        }
+        else
+        {
+            Console.WriteLine("The process reached the timeout and is still running.");
+            process.Kill(); // Terminate the process in case of a timeout
+        }
+    }
 
     using Stream stream = System.IO.File.OpenRead(legendaFilePath);
 
-    Console.WriteLine("Upload do arquivo rezlizado com sucesso.");
-
-    var sendVideo = await botClient.SendVideoAsync(
+    try
+    {
+        var sendVideo = await botClient.SendVideoAsync(
         chatId: chatId,
-        video: InputFile.FromStream(stream),
-        cancellationToken: ctoken
-    );
+            video: InputFile.FromStream(stream),
+            cancellationToken: ctoken
+        );
+    }
+    catch (IOException e)
+    {
+        Console.WriteLine($"An error occurred: {e.Message}");
+    }
+    finally
+    {
+        if (stream != null)
+        {
+            stream.Close(); // fs.Dispose();
+            Console.WriteLine("Space released");
+        }
+    }
 
-    string pasta = videosPath; // Substitua pelo caminho da pasta que você deseja limpar.
+    string folder = "/repo/videotoolsbrbot/videos/"; // Replace with the folder path you want to clean.
 
     try
     {
-        // Obtém todos os arquivos na pasta.
-        string[] arquivos = Directory.GetFiles(pasta);
+        // Get all files in the folder.
+        string[] files = Directory.GetFiles(folder);
 
-        Console.WriteLine(arquivos);
+        Console.WriteLine(files);
 
-        // Exclui cada arquivo encontrado.
-        foreach (string arquivo in arquivos)
+        // Delete each file found.
+        foreach (string file in files)
         {
-            System.IO.File.Delete(arquivo);
-            Console.WriteLine($"Arquivo excluído: {arquivo}");
+            System.IO.File.Delete(file);
+            Console.WriteLine($"File deleted: {file}");
         }
 
-        Console.WriteLine("Todos os arquivos foram excluídos com sucesso.");
+        Console.WriteLine("All files have been successfully deleted.");
     }
     catch (Exception e)
     {
-        Console.WriteLine($"Ocorreu um erro: {e.Message}");
+        Console.WriteLine($"An error occurred: {e.Message}");
     }
 
 }
 
 var me = await botClient.GetMeAsync(cancellationToken.Token);
 
-Console.WriteLine($"Escutando {me.Username}");
+Console.WriteLine($"Listening to {me.Username}");
 Console.ReadLine();
 
 cancellationToken.Cancel();
