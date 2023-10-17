@@ -6,85 +6,85 @@ C# project inspired by https://github.com/GabrielRF/VideoCaptionsBot, the projec
    <img src="http://img.shields.io/static/v1?label=STATUS&message=EM%20DESENVOLVIMENTO&color=RED&style=for-the-badge" #vitrinedev/>
 </p>
 
-### Tópicos 
+### Topics
 
-- [Descrição do projeto](#descrição-do-projeto)
+- [Project Description](#project-description)
 
-- [Funcionalidades](#funcionalidades)
+- [Features](#features)
 
-- [Ferramentas utilizadas](#ferramentas-utilizadas)
+- [Tools Used](#tools-used)
 
-- [Configuração Inicial](#configuração-inicial)
+- [Initial Configuration](#initial-configuration)
 
-- [Contribuições](#contribuições)
+- [Contributions](#contributions)
 
-- [Meus contatos](#meus-contatos)
+- [My Contacts](#my-contacts)
 
-- [Desenvolvedores](#desenvolvedores)
+- [Developers](#developers)
 
-### Descrição do projeto 
+### Project Description
 
 <p align="justify">
-  Bot do Telegram em desenvolvimento para legendar e/ou traduzir vídeos utilizando Api do Openai-whisper (https://github.com/RageAgainstThePixel/OpenAI-DotNet) e Api do Telegram (https://github.com/TelegramBots/Telegram.Bot).
+  Telegram bot under development for captioning and/or translating videos using the Openai-whisper API (https://github.com/RageAgainstThePixel/OpenAI-DotNet) and the Telegram API (https://github.com/TelegramBots/Telegram.Bot).
 
-### Funcionalidades
+### Features
 
-:heavy_check_mark: `Legendar Vídeo:` Ao receber um vídeo o bot irá gerar uma legenda (arquivo .srt) para legendar o vídeo, esse aquivo por padrão utiliza o mesmo idioma do vídeo.
+:heavy_check_mark: `Caption Video:` When receiving a video, the bot will generate a caption (`.srt` file) for the video. By default, this file uses the same language as the video.
 
-:heavy_check_mark: `Traduzir legenda:` Atualmente essa função está gerando a tradução utilizando o mesmo idioma da conta que enviou o vídeo.
+:heavy_check_mark: `Translate Caption:` Currently, this function is generating the translation using the same language as the account that sent the video.
 
-:hammer: _`Selecionar idioma:` Funcionalidade em desenvolvimento._
+:hammer: _`Select Language:` Functionality under development._
 
 ###
 
-### Ferramentas utilizadas
+### Tools Used
 
-- Api Openai-whisper: https://github.com/RageAgainstThePixel/OpenAI-DotNet
+- Openai-whisper API: https://github.com/RageAgainstThePixel/OpenAI-DotNet
 
-- Api do Telegram (Client .Net): https://github.com/RageAgainstThePixel/OpenAI-DotNet
+- Telegram API (Client .Net): https://github.com/RageAgainstThePixel/OpenAI-DotNet
 
 - FFmpeg: https://github.com/BtbN/FFmpeg-Builds/releases
 
 ###
 
-### Configuração Inicial
+### Initial Configuration
 
-Após baixar o projeto, você precisa:
+After downloading the project, you need to:
 
-#### Token das Api's:
+#### API Tokens:
 
-**Api Bot Telegram:**
+**Telegram Bot API:**
 
-- Contatar o https://t.me/botfather no telegram.
-- Clicar em "Criar novo bot" (e seguir todos os passos de criação)
-- Por fim guardar a api fornecida (caso precise consultar depois basta acessar "Meus bots", selecionar seu bot e clicar em "Api Token".
+- Contact https://t.me/botfather on Telegram.
+- Click on "Create a new bot" (and follow all the creation steps).
+- Finally, save the provided API token (if you need to consult it later, simply go to "My bots," select your bot, and click on "API Token").
 
-**Api OpenAI (paga)**
+**OpenAI API (paid)**
 
-- Basta acessar o https://platform.openai.com/account/api-keys e gerar o token.
+- Simply access https://platform.openai.com/account/api-keys and generate the token.
 
-#### Bibliotecas Utilizadas
+#### Used Libraries
 
-- **Telegram.Bot:** Uma biblioteca para interagir com a API do Telegram.
-- **OpenAI:** Uma biblioteca para interagir com a API OpenAI.
-- **OpenAI.Audio:** Biblioteca para lidar com áudio na API OpenAI (Geração das legendas / Tradução).
-- **Xabe.FFmpeg:** Utilizado para edição de vídeo (Incluir as legendas no vídeo).
-- **System.Diagnostics:** Utilizado para diagnóstico e depuração.
-- **System.Configuration:** Biblioteca para configurar valores a partir de um arquivo de configuração.
-- **System.Text e System.IO:** Bibliotecas padrão para manipulação de texto e operações de arquivo.
-- **Telegram.Bot.Types.ReplyMarkups:** Biblioteca para criar respostas de bot com marcações de resposta (não utilizada atualmente).
+- **Telegram.Bot:** A library for interacting with the Telegram API.
+- **OpenAI:** A library for interacting with the OpenAI API.
+- **OpenAI.Audio:** A library for handling audio in the OpenAI API (Caption generation/Translation).
+- **Xabe.FFmpeg:** Used for video editing (Including subtitles in the video).
+- **System.Diagnostics:** Used for diagnostics and debugging.
+- **System.Configuration:** A library for configuring values from a configuration file.
+- **System.Text and System.IO:** Standard libraries for text manipulation and file operations.
+- **Telegram.Bot.Types.ReplyMarkups:** A library for creating bot responses with reply markups (currently not used).
 
-Ao rodar o bot a primeira vez será necessário instalar essas biblioteas e assim você poderá executar o bot. 🏆 
+When running the bot for the first time, you will need to install these libraries, and then you can run the bot. 🏆 
 
-### Contribuições
+### Contributions
 
-Toda contribuição é bem vinda!
+All contributions are welcome!
 
-* Verifique as issues abertas e, se possível, sugira soluções.
-* Abra novas issues.
-* Envie um PR (preferencialmente vinculado a uma issue).
+* Check the open issues and, if possible, suggest solutions.
+* Open new issues.
+* Submit a PR (preferably linked to an issue).
 
-### Meus Contatos
+### My Contacts
 
 <p>  
 <a href="https://t.me/ZeroGC" target="blank"><img align="center" src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="andreluiz26dev" height="30" width="40" /></a>
@@ -95,7 +95,7 @@ Toda contribuição é bem vinda!
 <a href="https://linkedin.com/in/andreluiz26dev" target="blank">andreluiz26dev</a>
 </p>
 
-## Desenvolvedores
+## Developers
 
 | [<img src="https://avatars.githubusercontent.com/u/86925300?s=96&v=4" width=115><br><sub>André Luiz</sub>](https://github.com/AndreLuizpDev) | |
-| :---: | :---: 
+| :---: | :---:
