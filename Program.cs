@@ -42,6 +42,10 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
     var messageText = message.Text;
     var languageChat = message.From.LanguageCode.Substring(0, 2) ?? "en";
     string videosPath = Directory.GetCurrentDirectory();
+    var trashVideo = "";
+    var trashAudio = "";
+    var trashSubtitle = "";
+    var trashSubtitled = "";
 
     for (int i = 0; i < 3; i++)
     {
@@ -92,11 +96,15 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
         destination: fileStream,
         cancellationToken: ctoken);
 
+    trashVideo = destinationFilePath;
+
     fileStream.Close();
 
     // Set the input and output file paths for further processing
     string inputFilePath = destinationFilePath;
     string outputFilePath = videosPath + Path.GetFileNameWithoutExtension(filePath) + ".mp3";
+
+    trashAudio = outputFilePath;
 
     // Generating subtitles in the audio language
     sentMessage = await botClient.SendTextMessageAsync(
@@ -120,6 +128,8 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
     // Define the path to save the subtitle file
     string subtitleFilePath = videosPath + Path.GetFileNameWithoutExtension(filePath) + ".srt";
 
+    trashSubtitle = subtitleFilePath;
+
     System.IO.File.WriteAllText(subtitleFilePath, result);
 
     sentMessage = await botClient.SendTextMessageAsync(
@@ -129,6 +139,8 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
     );
 
     string legendaFilePath = videosPath + Path.GetFileNameWithoutExtension(filePath) + "_subtitled.mp4";
+
+    trashSubtitled = legendaFilePath;
 
     inputFilePath = inputFilePath.Replace('\\', '/').Replace("C:", "");
     subtitleFilePath = subtitleFilePath.Replace('\\', '/').Replace("C:", "");
@@ -223,17 +235,14 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
 
     try
     {
-        // Get all files in the folder.
-        string[] files = Directory.GetFiles(videosPath);
-
-        Console.WriteLine(files);
-
-        // Delete each file found.
-        foreach (string file in files)
-        {
-            System.IO.File.Delete(file);
-            Console.WriteLine($"File deleted: {file}");
-        }
+        Console.WriteLine($"Deleting: {trashAudio}");
+        System.IO.File.Delete(trashAudio);
+        Console.WriteLine($"Deleting: {trashSubtitle}");
+        System.IO.File.Delete(trashSubtitle);
+        Console.WriteLine($"Deleting: {trashSubtitled}");
+        System.IO.File.Delete(trashSubtitled);
+        Console.WriteLine($"Deleting: {trashVideo}");
+        System.IO.File.Delete(trashVideo);
 
         Console.WriteLine("All files have been successfully deleted.");
     }
