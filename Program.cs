@@ -4,15 +4,9 @@ using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using OpenAI.Audio;
-using Xabe.FFmpeg;
 using NAudio.Wave;
 using System.Diagnostics;
 using System.Configuration;
-using OpenAI.Models;
-using System.Text;
-using System.IO;
-using Telegram.Bot.Types.ReplyMarkups;
-using System.Diagnostics.SymbolStore;
 
 var botClient = new TelegramBotClient(ConfigurationManager.AppSettings["api-Bot"]);
 var apiOpenAI = new OpenAIClient(ConfigurationManager.AppSettings["sk-apiKey"]);
@@ -56,10 +50,10 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
 
     if (!Directory.Exists(videosPath))
     {
-        Console.WriteLine("A pasta de vídeos não existe, criando.. ");
+        Console.WriteLine("The videos folder does not exist, creating...");
         Directory.CreateDirectory(videosPath);
     }
-    else Console.WriteLine("A pasta existe!");
+    else Console.WriteLine("The folder exists!");
 
     Console.WriteLine($"Received message: '{messageText}' of type '{message.Type}' in chat '{chatId}' {message.Chat.Username} Language: {languageChat}");
 
@@ -138,19 +132,19 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
     cancellationToken: ctoken
     );
 
-    string legendaFilePath = videosPath + Path.GetFileNameWithoutExtension(filePath) + "_subtitled.mp4";
+    string subtitledFilePath = videosPath + Path.GetFileNameWithoutExtension(filePath) + "_subtitled.mp4";
 
-    trashSubtitled = legendaFilePath;
+    trashSubtitled = subtitledFilePath;
 
     inputFilePath = inputFilePath.Replace('\\', '/').Replace("C:", "");
     subtitleFilePath = subtitleFilePath.Replace('\\', '/').Replace("C:", "");
-    legendaFilePath = legendaFilePath.Replace('\\', '/').Replace("C:", "");
+    subtitledFilePath = subtitledFilePath.Replace('\\', '/').Replace("C:", "");
 
     // Configure the process
     var processInfo = new ProcessStartInfo
     {
         FileName = @"C:\ffmpeg-master-latest-win64-gpl\bin\ffmpeg.exe",
-        Arguments = $"-i \"{inputFilePath}\" -vf \"subtitles='{subtitleFilePath}'\" -y \"{legendaFilePath}\"",
+        Arguments = $"-i \"{inputFilePath}\" -vf \"subtitles='{subtitleFilePath}'\" -y \"{subtitledFilePath}\"",
         RedirectStandardOutput = true,
         RedirectStandardError = true,
         UseShellExecute = false,
@@ -164,43 +158,42 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
     {
         process.StartInfo = processInfo;
 
-        // Configuration to read the process's standard output
-        var outputBuilder = new StringBuilder();
-        var errorBuilder = new StringBuilder();
-        process.OutputDataReceived += (sender, e) => outputBuilder.AppendLine(e.Data);
-        process.ErrorDataReceived += (sender, e) => errorBuilder.AppendLine(e.Data);
+        FileInfo videoFileInfo = new FileInfo(inputFilePath);
+        long totalVideoBytes = videoFileInfo.Length;
+        long bytesRead = 0;
 
-        // Start the process and redirect output
+        Console.WriteLine($"totalVideoBytes: {totalVideoBytes}");
+        ;
         process.Start();
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
 
+        while (bytesRead < totalVideoBytes)
+        {
+            // Get the size of the video file after each iteration.
+            videoFileInfo.Refresh();
+
+            // Update the amount of bytes read.
+            bytesRead = videoFileInfo.Length;
+
+            // Calculate the percentage of the video read.
+            double percentageRead = (double)bytesRead / totalVideoBytes * 100;
+
+            Console.WriteLine($"bytesRead: {bytesRead}");
+            Console.WriteLine($"totalVideoBytes: {totalVideoBytes}");
+            Console.WriteLine($"percentageRead: {percentageRead}");
+
+            Console.WriteLine($"Percentage of video read: {percentageRead:F2}%");
+
+            Thread.Sleep(500); // Aguarde um segundo antes de verificar novamente.
+        }
+
         int timeoutMilliseconds = 60000;
 
-        Console.WriteLine("Current date and time 1 ************: " + DateTime.Now);
-
-        // Wait for the process to exit or reach a timeout
+        Console.WriteLine("Waiting for the process to exit!");
         if (process.WaitForExit(timeoutMilliseconds))
         {
-            Console.WriteLine("Current date and time 2 ************: " + DateTime.Now);
-
-            // Check if the output contains information about bytes read
-            string output = outputBuilder.ToString();
-            bool fileReadComplete = output.Contains("file read:");
-            int bytesRead = 0;
-
-            if (fileReadComplete)
-            {
-                // Extract the bytes read from the output
-                int startIndex = output.LastIndexOf("file read:") + "file read:".Length;
-                int endIndex = output.LastIndexOf("bytes");
-                string bytesReadStr = output.Substring(startIndex, endIndex - startIndex).Trim();
-                if (int.TryParse(bytesReadStr, out bytesRead))
-                {
-                    Console.WriteLine($"Bytes read: {bytesRead}");
-                }
-            }
-
+            Console.WriteLine("Process exit with success!");
             process.Close();
         }
         else
@@ -208,9 +201,10 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
             Console.WriteLine("The process reached the timeout and is still running.");
             process.Kill(); // Terminate the process in case of a timeout
         }
+
     }
 
-    using Stream stream = System.IO.File.OpenRead(legendaFilePath);
+    using Stream stream = System.IO.File.OpenRead(subtitledFilePath);
 
     try
     {
