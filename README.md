@@ -7,6 +7,8 @@ C# project inspired by https://github.com/GabrielRF/VideoCaptionsBot, the projec
 </p>
 
 [![CodeFactor](https://www.codefactor.io/repository/github/andreluizpdev/videotoolsbrbot/badge)](https://www.codefactor.io/repository/github/andreluizpdev/videotoolsbrbot)
+![GitHub top language](https://img.shields.io/github/languages/top/AndreLuizpDev/VideoToolsbrbot)
+![GitHub repo size](https://img.shields.io/github/repo-size/AndreLuizpDev/VideoToolsbrbot)
 
 ### Topics
 
