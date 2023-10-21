@@ -41,6 +41,21 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
     var chatId = message.Chat.Id;
     var messageText = message.Text;
     var languageChat = message.From.LanguageCode.Substring(0, 2) ?? "en";
+    string videosPath = Directory.GetCurrentDirectory();
+
+    for (int i = 0; i < 3; i++)
+    {
+        videosPath = Directory.GetParent(videosPath).FullName;
+    }
+
+    videosPath = videosPath + @"\Videos\";
+
+    if (!Directory.Exists(videosPath))
+    {
+        Console.WriteLine("A pasta de vídeos não existe, criando.. ");
+        Directory.CreateDirectory(videosPath);
+    }
+    else Console.WriteLine("A pasta existe!");
 
     Console.WriteLine($"Received message: '{messageText}' of type '{message.Type}' in chat '{chatId}' {message.Chat.Username} Language: {languageChat}");
 
@@ -63,28 +78,17 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
 
     // Get file information for the received video
     var fileInfo = await botClient.GetFileAsync(message.Video!.FileId);
-    var filePath = fileInfo.FilePath;
-
-    Console.WriteLine($"{filePath} {messageText}");
+    var filePath = Path.GetFileName(fileInfo.FilePath);
 
     // Define the destination file path to save the video
-    string destinationFilePath = "/repo/VideoToolsbrbot/" + filePath;
+    string destinationFilePath = videosPath + filePath;
 
-
-    // Check if the "videos" folder exists, and create it if it doesn't.
-    string videosFolder = Path.GetDirectoryName(destinationFilePath);
-
-    if (!Directory.Exists(videosFolder))
-    {
-        Directory.CreateDirectory(videosFolder);
-    }
-
-    Console.WriteLine("Saving the video...");
+    Console.WriteLine($"Saving the video...");
 
     // Create a stream to save the video file
     await using Stream fileStream = System.IO.File.Create(destinationFilePath);
     await botClient.DownloadFileAsync(
-        filePath: filePath,
+        filePath: fileInfo.FilePath,
         destination: fileStream,
         cancellationToken: ctoken);
 
@@ -92,9 +96,7 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
 
     // Set the input and output file paths for further processing
     string inputFilePath = destinationFilePath;
-    string outputFilePath = "/repo/VideoToolsbrbot/Videos/" + Path.GetFileNameWithoutExtension(filePath) + ".mp3";
-
-    Console.WriteLine($"Input: {inputFilePath} Output: {outputFilePath}");
+    string outputFilePath = videosPath + Path.GetFileNameWithoutExtension(filePath) + ".mp3";
 
     // Generating subtitles in the audio language
     sentMessage = await botClient.SendTextMessageAsync(
@@ -115,10 +117,8 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
     // Generate the subtitles using whisper OpenAI
     var result = await apiOpenAI.AudioEndpoint.CreateTranscriptionAsync(request);
 
-    Console.WriteLine("Saving subtitles...");
-
     // Define the path to save the subtitle file
-    string subtitleFilePath = "/repo/VideoToolsbrbot/Videos/" + Path.GetFileNameWithoutExtension(filePath) + ".srt";
+    string subtitleFilePath = videosPath + Path.GetFileNameWithoutExtension(filePath) + ".srt";
 
     System.IO.File.WriteAllText(subtitleFilePath, result);
 
@@ -128,10 +128,11 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
     cancellationToken: ctoken
     );
 
-    string legendaFilePath = "/repo/VideoToolsbrbot/Videos/" + Path.GetFileNameWithoutExtension(filePath) + "_subtitled.mp4";
+    string legendaFilePath = videosPath + Path.GetFileNameWithoutExtension(filePath) + "_subtitled.mp4";
 
-    Console.WriteLine($"Saving file: {Path.GetFileNameWithoutExtension(filePath)}_subtitled.mp4 ...");
-
+    inputFilePath = inputFilePath.Replace('\\', '/').Replace("C:", "");
+    subtitleFilePath = subtitleFilePath.Replace('\\', '/').Replace("C:", "");
+    legendaFilePath = legendaFilePath.Replace('\\', '/').Replace("C:", "");
 
     // Configure the process
     var processInfo = new ProcessStartInfo
@@ -188,8 +189,6 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
                 }
             }
 
-            Console.WriteLine("File generated successfully!");
-
             process.Close();
         }
         else
@@ -222,12 +221,10 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
         }
     }
 
-    string folder = "/repo/videotoolsbrbot/videos/"; // Replace with the folder path you want to clean.
-
     try
     {
         // Get all files in the folder.
-        string[] files = Directory.GetFiles(folder);
+        string[] files = Directory.GetFiles(videosPath);
 
         Console.WriteLine(files);
 
