@@ -6,6 +6,8 @@ C# project inspired by https://github.com/GabrielRF/VideoCaptionsBot, the projec
    <img src="http://img.shields.io/static/v1?label=STATUS&message=EM%20DESENVOLVIMENTO&color=RED&style=for-the-badge" #vitrinedev/>
 </p>
 
+[![CodeFactor](https://www.codefactor.io/repository/github/andreluizpdev/videotoolsbrbot/badge)](https://www.codefactor.io/repository/github/andreluizpdev/videotoolsbrbot)
+
 ### Topics
 
 - [Project Description](#project-description)
