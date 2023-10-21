@@ -7,6 +7,7 @@ using OpenAI.Audio;
 using NAudio.Wave;
 using System.Diagnostics;
 using System.Configuration;
+using Newtonsoft.Json.Linq;
 
 var botClient = new TelegramBotClient(ConfigurationManager.AppSettings["api-Bot"]);
 var apiOpenAI = new OpenAIClient(ConfigurationManager.AppSettings["sk-apiKey"]);
@@ -140,11 +141,26 @@ async Task updateHandlerAsync(ITelegramBotClient botClient, Update update, Cance
     subtitleFilePath = subtitleFilePath.Replace('\\', '/').Replace("C:", "");
     subtitledFilePath = subtitledFilePath.Replace('\\', '/').Replace("C:", "");
 
+    var fontname = ""; //The fontname as used by Windows. Case-sensitive.
+    int fontsize = 0;
+    var primaryColour = "&H03fcff"; //A long integer BGR (blue-green-red)  value. ie. the byte order in the hexadecimal equivelent of this number is BBGGRR
+    var outlineColour = "&H40000000"; //A long integer BGR (blue-green-red)  value. ie. the byte order in the hexadecimal equivelent of this number is BBGGRR
+    var backColour = "&H80000000"; //This is the colour of the subtitle outline or shadow, if these are used. A long integer BGR (blue-green-red)  value. ie. the byte order in the hexadecimal equivelent of this number is BBGGRR.
+    int bold = 1; //This defines whether text is bold (true or 1) or not (false or 0).
+    int italic = 1; //This defines whether text is italic (true or 1) or not (false or 0).
+    int borderStyle = 3; //1=Outline + drop shadow, 3=Opaque box.
+    int outline = 1; //If BorderStyle is 1,  then this specifies the width of the outline around the text, in pixels. Values may be 0, 1, 2, 3 or 4.
+    double spacing = 0.8; //Extra space between characters. [pixels]
+    double angle = 0.8; //The origin of the rotation is defined by the alignment. Can be a floating point number. [degrees]
+    int alignment = 2; //(1-3 sub, 4-6 mid, 7-9 top)
+
+    var forceStyleSubtitle = $"'PrimaryColour={primaryColour},Italic={italic},Spacing={spacing}'";
+
     // Configure the process
     var processInfo = new ProcessStartInfo
     {
-        FileName = @"C:\ffmpeg-master-latest-win64-gpl\bin\ffmpeg.exe",
-        Arguments = $"-i \"{inputFilePath}\" -vf \"subtitles='{subtitleFilePath}'\" -y \"{subtitledFilePath}\"",
+        FileName = @"ffmpeg",
+        Arguments = $"-i \"{inputFilePath}\" -vf \"subtitles={subtitleFilePath}:force_style={forceStyleSubtitle}\" -y \"{subtitledFilePath}\"",
         RedirectStandardOutput = true,
         RedirectStandardError = true,
         UseShellExecute = false,
