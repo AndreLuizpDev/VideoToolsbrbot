@@ -18,7 +18,6 @@ namespace VideoToolsbrbot
 	{
 		static void Main(string[] args)
 		{
-
             string botToken = ConfigurationManager.AppSettings["BotToken"];
 
             var bot = new MainVideoToolsbrbot(botToken);
@@ -29,7 +28,6 @@ namespace VideoToolsbrbot
 
         public override async Task OnPrivateChat(Chat chat, User user, UpdateInfo update)
 		{
-
             var apiOpenAI = new OpenAIClient(ConfigurationManager.AppSettings["sk-apiKey"]);
             var chatId = update.Message.Chat.Id;
             var messageText = update.Message.Text;
@@ -54,7 +52,6 @@ namespace VideoToolsbrbot
             }
             else Console.WriteLine("The folder exists!");
 
-
             if (update.Message != null && update.Message.From != null && !string.IsNullOrEmpty(update.Message.From.LanguageCode))
             {
                 languageChat = update.Message.From.LanguageCode.Substring(0, 2);
@@ -63,7 +60,6 @@ namespace VideoToolsbrbot
             Console.WriteLine($"Received message: '{messageText}' of type '{update.Message.Type}' in chat '{chatId}' {update.Message.Chat.Username} Language: {languageChat}");
 
            // if (update.UpdateKind != UpdateKind.NewMessage || update.MsgCategory != MsgCategory.Text) return;
-
 
             if (update.Message.Video is null)
             {
@@ -76,7 +72,6 @@ namespace VideoToolsbrbot
 
             if (update.Message.Video is not null)
             {
-
                 // Get file information for the received video
                 var fileInfo = await Telegram.GetFileAsync(update.Message.Video!.FileId);
                 var filePath = Path.GetFileName(fileInfo.FilePath);
@@ -101,7 +96,6 @@ namespace VideoToolsbrbot
                 string outputFilePath = videosPath + Path.GetFileNameWithoutExtension(filePath) + ".mp3";
 
                 trashAudio = outputFilePath;
-
 
                 //#### QUESTION
                 var choice = await Telegram.SendTextMessageAsync(chat, "What is the fontsize?", replyMarkup: new InlineKeyboardMarkup(new[]
@@ -230,7 +224,6 @@ namespace VideoToolsbrbot
                 inputFilePath = inputFilePath.Replace('\\', '/').Replace("C:", "");
                 subtitleFilePath = subtitleFilePath.Replace('\\', '/').Replace("C:", "");
                 subtitledFilePath = subtitledFilePath.Replace('\\', '/').Replace("C:", "");
-
                 
                 // Configure the process
                 var processInfo = new ProcessStartInfo
@@ -255,7 +248,7 @@ namespace VideoToolsbrbot
                     long bytesRead = 0;
 
                     Console.WriteLine($"totalVideoBytes: {totalVideoBytes}");
-                    ;
+                    
                     process.Start();
                     process.BeginOutputReadLine();
                     process.BeginErrorReadLine();
@@ -295,10 +288,7 @@ namespace VideoToolsbrbot
                     }
 
                 }
-
                 using Stream stream = System.IO.File.OpenRead(subtitledFilePath);
-                //InputOnlineFile inputOnlineFile = new InputOnlineFile(stream);
-                //InputOnlineFile inputOnlineFile = new InputFile.;
 
                 try
                 {
@@ -342,7 +332,6 @@ namespace VideoToolsbrbot
 			}
 
         }
-
 		public override async Task OnGroupChat(Chat chat, UpdateInfo update)
 		{
 			Console.WriteLine($"In group chat {chat.Name()}");
