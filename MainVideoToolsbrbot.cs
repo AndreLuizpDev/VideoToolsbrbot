@@ -10,27 +10,33 @@ using OpenAI.Audio;
 using NAudio.Wave;
 using System.IO;
 using System.Diagnostics;
+using System.Linq;
+using Telegram.Bot.Types.Enums;
 
 namespace VideoToolsbrbot
 {
-	public class MainVideoToolsbrbot : EasyBot
-	{
-		static void Main(string[] args)
-		{
-            string botToken = ConfigurationManager.AppSettings["BotToken"];
+    public class MainVideoToolsbrbot : EasyBot
+    {
+        static void Main(string[] args)
+        {
+            if (string.IsNullOrEmpty(ConfigurationManager.AppSettings["BotToken"])) { 
+                Console.WriteLine("Token null"); return;
+            }
+
+            string botToken = ConfigurationManager.AppSettings["BotToken"] ?? "";
 
             var bot = new MainVideoToolsbrbot(botToken);
             bot.Run();
         }
 
-		public MainVideoToolsbrbot(string botToken) : base(botToken) { }
+        public MainVideoToolsbrbot(string botToken) : base(botToken) { }
 
         public override async Task OnPrivateChat(Chat chat, User user, UpdateInfo update)
-		{
+        {
             var apiOpenAI = new OpenAIClient(ConfigurationManager.AppSettings["sk-apiKey"]);
             var chatId = update.Message.Chat.Id;
             var messageText = update.Message.Text;
-			var languageChat = "en";
+            var languageChat = "en";
             string videosPath = Directory.GetCurrentDirectory();
             var trashVideo = "";
             var trashAudio = "";
@@ -57,8 +63,6 @@ namespace VideoToolsbrbot
             }
 
             Console.WriteLine($"Received message: '{messageText}' of type '{update.Message.Type}' in chat '{chatId}' {update.Message.Chat.Username} Language: {languageChat}");
-
-           // if (update.UpdateKind != UpdateKind.NewMessage || update.MsgCategory != MsgCategory.Text) return;
 
             if (update.Message.Video is null)
             {
@@ -96,6 +100,14 @@ namespace VideoToolsbrbot
 
                 trashAudio = outputFilePath;
 
+                var sentMessage = await Telegram.SendTextMessageAsync(
+                    chat,
+                    "Configurações Selecionadas:"
+                    );
+
+                var configId = sentMessage.MessageId;
+                var configMessage = sentMessage.Text;
+
                 //#### QUESTION
                 var choice = await Telegram.SendTextMessageAsync(chat, "What is the fontsize?", replyMarkup: new InlineKeyboardMarkup(new[]
                 { new InlineKeyboardButton[] {
@@ -106,6 +118,15 @@ namespace VideoToolsbrbot
                 var fontsize = await ButtonClicked(update, choice);
                 ReplyCallback(update);
                 await Telegram.DeleteMessageAsync(chatId, update.Message.MessageId);
+
+                configMessage = configMessage + '\n' + "<b>fontsize:</b> " + fontsize;
+
+                await Telegram.EditMessageTextAsync(
+                    chatId: chatId,
+                    messageId: configId,
+                    text: configMessage,
+                     parseMode: ParseMode.Html
+                    );
 
                 //#### QUESTION
                 var choice2 = await Telegram.SendTextMessageAsync(chat, "What is the primaryColour?", replyMarkup: new InlineKeyboardMarkup(new[]
@@ -118,6 +139,15 @@ namespace VideoToolsbrbot
                 ReplyCallback(update);
                 await Telegram.DeleteMessageAsync(chatId, update.Message.MessageId);
 
+                configMessage = configMessage + '\n' + "<b>primaryColour:</b> " + primaryColour;
+
+                await Telegram.EditMessageTextAsync(
+                    chatId: chatId,
+                    messageId: configId,
+                    text: configMessage,
+                     parseMode: ParseMode.Html
+                    );
+
                 //#### QUESTION
                 var choice4 = await Telegram.SendTextMessageAsync(chat, "What is the backColour?", replyMarkup: new InlineKeyboardMarkup(new[]
                 { new InlineKeyboardButton[] {
@@ -128,6 +158,15 @@ namespace VideoToolsbrbot
                 var backColour = await ButtonClicked(update, choice4);
                 ReplyCallback(update);
                 await Telegram.DeleteMessageAsync(chatId, update.Message.MessageId);
+
+                configMessage = configMessage + '\n' + "<b>backColour:</b> " + backColour;
+
+                await Telegram.EditMessageTextAsync(
+                    chatId: chatId,
+                    messageId: configId,
+                    text: configMessage,
+                     parseMode: ParseMode.Html
+                    );
 
                 //#### QUESTION
                 var choice7 = await Telegram.SendTextMessageAsync(chat, "What is the borderStyle?", replyMarkup: new InlineKeyboardMarkup(new[]
@@ -140,6 +179,15 @@ namespace VideoToolsbrbot
                 ReplyCallback(update);
                 await Telegram.DeleteMessageAsync(chatId, update.Message.MessageId);
 
+                configMessage = configMessage + '\n' + "<b>borderStyle:</b> " + borderStyle;
+
+                await Telegram.EditMessageTextAsync(
+                    chatId: chatId,
+                    messageId: configId,
+                    text: configMessage,
+                     parseMode: ParseMode.Html
+                    );
+
                 //#### QUESTION
                 var choice3 = await Telegram.SendTextMessageAsync(chat, "What is the outlineColour?", replyMarkup: new InlineKeyboardMarkup(new[]
                 { new InlineKeyboardButton[] {
@@ -151,6 +199,15 @@ namespace VideoToolsbrbot
                 ReplyCallback(update);
                 await Telegram.DeleteMessageAsync(chatId, update.Message.MessageId);
 
+                configMessage = configMessage + '\n' + "<b>outlineColour:</b> " + outlineColour;
+
+                await Telegram.EditMessageTextAsync(
+                    chatId: chatId,
+                    messageId: configId,
+                    text: configMessage,
+                     parseMode: ParseMode.Html
+                    );
+
                 //#### QUESTION
                 var choice5 = await Telegram.SendTextMessageAsync(chat, "Is bold?", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton[]
                 {
@@ -160,6 +217,15 @@ namespace VideoToolsbrbot
                 ReplyCallback(update);
                 await Telegram.DeleteMessageAsync(chatId, update.Message.MessageId);
 
+                configMessage = configMessage + '\n' + "<b>bold:</b> " + bold;
+
+                await Telegram.EditMessageTextAsync(
+                    chatId: chatId,
+                    messageId: configId,
+                    text: configMessage,
+                     parseMode: ParseMode.Html
+                    );
+
                 //#### QUESTION
                 var choice6 = await Telegram.SendTextMessageAsync(chat, "Is italic?", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton[]
                 {
@@ -168,6 +234,15 @@ namespace VideoToolsbrbot
                 var italic = await ButtonClicked(update, choice6);
                 ReplyCallback(update);
                 await Telegram.DeleteMessageAsync(chatId, update.Message.MessageId);
+
+                configMessage = configMessage + '\n' + "<b>italic:</b> " + italic;
+
+                await Telegram.EditMessageTextAsync(
+                    chatId: chatId,
+                    messageId: configId,
+                    text: configMessage,
+                     parseMode: ParseMode.Html
+                    );
 
                 var fontname = ""; //The fontname as used by Windows. Case-sensitive.
                 int outline = 1; //If BorderStyle is 1,  then this specifies the width of the outline around the text, in pixels. Values may be 0, 1, 2, 3 or 4.
@@ -184,8 +259,8 @@ namespace VideoToolsbrbot
                             $"bold={bold}," +
                             $"italic={italic}'";
 
-         //       await Telegram.SendTextMessageAsync(chat, 
-									//$"{forceStyleSubtitle}");
+                //       await Telegram.SendTextMessageAsync(chat, 
+                //$"{forceStyleSubtitle}");
 
                 // Generating subtitles in the audio language
                 await Telegram.SendTextMessageAsync(
@@ -223,7 +298,7 @@ namespace VideoToolsbrbot
                 inputFilePath = inputFilePath.Replace('\\', '/').Replace("C:", "");
                 subtitleFilePath = subtitleFilePath.Replace('\\', '/').Replace("C:", "");
                 subtitledFilePath = subtitledFilePath.Replace('\\', '/').Replace("C:", "");
-                
+
                 // Configure the process
                 var processInfo = new ProcessStartInfo
                 {
@@ -247,7 +322,7 @@ namespace VideoToolsbrbot
                     long bytesRead = 0;
 
                     Console.WriteLine($"totalVideoBytes: {totalVideoBytes}");
-                    
+
                     process.Start();
                     process.BeginOutputReadLine();
                     process.BeginErrorReadLine();
@@ -327,30 +402,30 @@ namespace VideoToolsbrbot
                 }
 
                 return;
-			}
+            }
         }
-		public override async Task OnGroupChat(Chat chat, UpdateInfo update)
-		{
-			Console.WriteLine($"In group chat {chat.Name()}");
-			do
-			{
-				switch (update.UpdateKind)
-				{
-					case UpdateKind.NewMessage:
-						Console.WriteLine($"{update.Message.From.Name()} wrote: {update.Message.Text}");
-						if (update.Message.Text == "/button@" + BotName)
-							await Telegram.SendTextMessageAsync(chat, "You summoned me!", replyMarkup: new InlineKeyboardMarkup("I grant your wish"));
-						break;
-					case UpdateKind.EditedMessage:
-						Console.WriteLine($"{update.Message.From.Name()} edited: {update.Message.Text}");
-						break;
-					case UpdateKind.CallbackQuery:
-						Console.WriteLine($"{update.Message.From.Name()} clicked the button with data '{update.CallbackData}' on the msg: {update.Message.Text}");
-						ReplyCallback(update, "Wish granted !");
-						break;
-				}
-				// in this approach, we choose to continue execution in a loop, obtaining new updates/messages for this chat as they come
-			} while (await NextEvent(update) != 0);
-		}
-	}
+        public override async Task OnGroupChat(Chat chat, UpdateInfo update)
+        {
+            Console.WriteLine($"In group chat {chat.Name()}");
+            do
+            {
+                switch (update.UpdateKind)
+                {
+                    case UpdateKind.NewMessage:
+                        Console.WriteLine($"{update.Message.From.Name()} wrote: {update.Message.Text}");
+                        if (update.Message.Text == "/button@" + BotName)
+                            await Telegram.SendTextMessageAsync(chat, "You summoned me!", replyMarkup: new InlineKeyboardMarkup("I grant your wish"));
+                        break;
+                    case UpdateKind.EditedMessage:
+                        Console.WriteLine($"{update.Message.From.Name()} edited: {update.Message.Text}");
+                        break;
+                    case UpdateKind.CallbackQuery:
+                        Console.WriteLine($"{update.Message.From.Name()} clicked the button with data '{update.CallbackData}' on the msg: {update.Message.Text}");
+                        ReplyCallback(update, "Wish granted !");
+                        break;
+                }
+                // in this approach, we choose to continue execution in a loop, obtaining new updates/messages for this chat as they come
+            } while (await NextEvent(update) != 0);
+        }
+    }
 }
