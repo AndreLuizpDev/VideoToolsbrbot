@@ -102,10 +102,6 @@ namespace VideoToolsbrbot
 
                 trashAudio = outputFilePath;
 
-                CustomizeCaption captionGenerator = new CustomizeCaption(botToken, chatId, Telegram, update);
-
-                string forceStyleSubtitle = await captionGenerator.GenerateCaption();
-
                 //       await Telegram.SendTextMessageAsync(chat, 
                 //$"{forceStyleSubtitle}");
 
@@ -134,6 +130,23 @@ namespace VideoToolsbrbot
 
                 System.IO.File.WriteAllText(subtitleFilePath, result);
 
+                string forceStyleSubtitle = "";
+
+                //#### QUESTION
+                var choice5 = await Telegram.SendTextMessageAsync(chatId, "Want Customize Caption?", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton[]
+                {
+                    new("Yes") { CallbackData = "1" }, new("No") { CallbackData = "0" }
+                }));
+                var wantCustomizeCaption = await ButtonClicked(update, choice5);
+                ReplyCallback(update);
+                await Telegram.DeleteMessageAsync(chatId, update.Message.MessageId);
+
+                if (wantCustomizeCaption == "1")
+                {
+                    CustomizeCaption captionGenerator = new CustomizeCaption(botToken, chatId, Telegram, update);
+                    forceStyleSubtitle = ":force_style=" + await captionGenerator.GenerateCaption();
+                }
+
                 await Telegram.SendTextMessageAsync(
                 chatId: chatId,
                 text: "Adding subtitles to the video...");
@@ -150,7 +163,7 @@ namespace VideoToolsbrbot
                 var processInfo = new ProcessStartInfo
                 {
                     FileName = @"ffmpeg",
-                    Arguments = $"-i \"{inputFilePath}\" -vf \"subtitles={subtitleFilePath}:force_style={forceStyleSubtitle}\" -y \"{subtitledFilePath}\"",
+                    Arguments = $"-i \"{inputFilePath}\" -vf \"subtitles={subtitleFilePath}{forceStyleSubtitle}\" -y \"{subtitledFilePath}\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
