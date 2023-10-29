@@ -10,7 +10,6 @@ using OpenAI.Audio;
 using NAudio.Wave;
 using System.IO;
 using System.Diagnostics;
-//using Telegram.Bot.Types.InputFiles;
 
 namespace VideoToolsbrbot
 {
@@ -286,7 +285,6 @@ namespace VideoToolsbrbot
                         Console.WriteLine("The process reached the timeout and is still running.");
                         process.Kill(); // Terminate the process in case of a timeout
                     }
-
                 }
                 using Stream stream = System.IO.File.OpenRead(subtitledFilePath);
 
@@ -330,7 +328,6 @@ namespace VideoToolsbrbot
 
                 return;
 			}
-
         }
 		public override async Task OnGroupChat(Chat chat, UpdateInfo update)
 		{
